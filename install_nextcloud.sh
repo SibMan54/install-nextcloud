@@ -11,6 +11,7 @@ NGINX_ENABLED="/etc/nginx/sites-enabled"
 STREAM_CONF="/etc/nginx/stream-enabled/stream.conf"
 HTTP_CONF="${NGINX_AVAIL}/80.conf"
 
+MIN_FREE_GB=20
 NC_STREAM_PORT=6443     # ВСЕГДА 6443 для stream
 NC_HTTP_PORT=""         # порт docker-контейнера (вводится пользователем)
 
@@ -42,11 +43,27 @@ port_free() {
 }
 
 ### =========================
+### ПРОВЕРКА СВОБОДНОГО ПРОСТРАНСТВА НА ДИСКЕ
+### =========================
+
+check_disk_space() {
+    local free_gb
+    free_gb=$(df -BG / | awk 'NR==2 {gsub("G","",$4); print $4}')
+
+    info "Свободное место на диске: ${free_gb} GB"
+
+    if [ "$free_gb" -lt "$MIN_FREE_GB" ]; then
+        err "Недостаточно свободного места. Требуется минимум ${MIN_FREE_GB} GB."
+    fi
+}
+
+### =========================
 ### ПРОВЕРКИ
 ### =========================
 
 [ "$EUID" -ne 0 ] && err "Скрипт должен запускаться от root"
 
+check_disk_space
 command -v nginx >/dev/null || err "Nginx не установлен"
 command -v docker >/dev/null || err "Docker не установлен"
 command -v docker-compose >/dev/null || command -v docker >/dev/null || err "Docker Compose не найден"

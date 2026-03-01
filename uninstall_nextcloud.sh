@@ -99,8 +99,14 @@ fi
 ### =========================
 
 if certbot certificates | grep -q "$DOMAIN"; then
-    info "Удаление сертификата Let's Encrypt для $DOMAIN"
-    certbot delete --cert-name "$DOMAIN" --non-interactive
+    info "Найден сертификат для $DOMAIN"
+    read -rp "Удалить сертификат Let's Encrypt? [y/N]: " CONFIRM
+    if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
+        info "Удаление сертификата Let's Encrypt для $DOMAIN"
+        certbot delete --cert-name "$DOMAIN" --non-interactive
+    else
+        warn "Сертификат оставлен"
+    fi
 else
     warn "Сертификат для $DOMAIN не найден"
 fi

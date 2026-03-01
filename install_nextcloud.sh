@@ -89,7 +89,17 @@ certbot certonly --nginx -d "$DOMAIN" --non-interactive --agree-tos -m admin@"$D
 ### =========================
 
 info "Обновление 80.conf"
-sed -i "s/server_name .*/server_name ${DOMAIN};/" "$HTTP_CONF"
+if grep -q "server_name" "$HTTP_CONF"; then
+    backup_file "$HTTP_CONF"
+    if grep -qE "server_name .*\\b${DOMAIN}\\b" "$HTTP_CONF"; then
+        info "Домен ${DOMAIN} уже присутствует в server_name — пропуск"
+    else
+        info "Добавление домена ${DOMAIN} в server_name"
+        sed -i -E "s|(server_name\s+[^;]*);|\1 ${DOMAIN};|" "$HTTP_CONF"
+    fi
+else
+    err "В 80.conf не найден server_name — ручная проверка обязательна"
+fi
 
 ### =========================
 ### cloud.domain.conf

@@ -52,6 +52,11 @@ Nginx stream (ssl_preread + SNI)
                     Docker Nextcloud (Apache)
 ```
 ## 🚀 Установка
+Удаленно
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/SibMan54/install-nextcloud/refs/heads/main/install_nextcloud.sh)
+```
+Локально
 ```bash
 chmod +x install_nextcloud.sh
 sudo ./install_nextcloud.sh
@@ -61,6 +66,11 @@ sudo ./install_nextcloud.sh
 - порт для Docker-контейнера (например 8888)
 
 ## 🧹 Удаление
+Удаленно
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/SibMan54/install-nextcloud/refs/heads/main/uninstall_nextcloud.sh)
+```
+Локально
 ```bash
 chmod +x uninstall_nextcloud.sh
 sudo ./uninstall_nextcloud.sh
@@ -71,7 +81,15 @@ sudo ./uninstall_nextcloud.sh
 - Данные Nextcloud удаляются только по подтверждению
 
 ## 💾 Бэкапы конфигурации
-Тип   Когда создаётся
-- .original   один раз, до первых изменений
-- .nextcloud  перед правками Nextcloud
-**Используются для безопасного отката.**
+|Тип|Когда создаётся|
+|.original|один раз, до первых изменений|
+|.nextcloud|перед правками Nextcloud|
+- Используются для безопасного отката.
+
+## ⚠️ Важно
+- Скрипт не трогает чужие сайты
+- Работает корректно при нескольких доменах на 443
+- Предназначен для одного Nextcloud на сервер
+
+## 📄 Лицензия
+- MIT

@@ -26,14 +26,15 @@ err()  { echo -e "\033[1;31m[ERROR]\033[0m $1"; exit 1; }
 backup_file() {
     local file="$1"
     if [ ! -f "$file" ]; then
+        err "Файл $file не найден, резервная копия не создана."
         return
     fi
-
+    local timestamp="$(date +%Y%m%d-%H%M%S)"
     if [ ! -f "${file}.original" ]; then
         cp "$file" "${file}.original"
         info "Создан original-бэкап: ${file}.original"
     else
-        cp "$file" "${file}.nextcloud"
+        cp "$file" "${file}.bak-${timestamp}"
         info "Создан nextcloud-бэкап: ${file}.nextcloud"
     fi
 }

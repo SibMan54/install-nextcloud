@@ -229,5 +229,46 @@ nginx -t
 info "Перезагрузка Nginx"
 systemctl reload nginx
 
+### =========================
+### FAIL2BAN
+### =========================
+
+read -rp "Настроить Fail2ban для защиты Nextcloud? (y/n): " answer
+if [[ "$answer" == "y" ]]; then
+
+    info "Настройка Fail2ban для Nextcloud"
+    if ! command -v fail2ban-client &>/dev/null; then
+        apt install -y fail2ban
+        info "Fail2ban успешно установлен."
+    else
+        info "Fail2ban уже установлен."
+    fi
+
+cat > /etc/fail2ban/filter.d/nextcloud.conf <<'EOF'
+[Definition]
+failregex = ^<HOST> - .* "(GET|POST|PROPFIND|REPORT|PUT|DELETE).*" (401|403)
+            ^<HOST> - .* "(GET|POST).*\/login.*" (401|403)
+            ^<HOST> - .* "(GET|POST).*\/remote\.php\/dav.*" (401|403)
+EOF
+
+cat > /etc/fail2ban/jail.d/nextcloud.conf <<'EOF'
+[nextcloud]
+enabled  = true
+port     = http,https
+filter   = nextcloud
+logpath  = /var/log/nginx/access.log
+ignoreip = 127.0.0.1/8 ::1 YOUR.IP.ADDRESS
+maxretry = 5
+findtime = 600
+bantime  = 3600
+EOF
+
+    systemctl restart fail2ban
+fi
+
+### =========================
+### ФИНАЛ
+### =========================
+
 info "✅ Установка Nextcloud завершена успешно!"
 info "🌐 Доступ: https://${DOMAIN}"

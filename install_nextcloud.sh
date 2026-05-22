@@ -25,17 +25,20 @@ err()  { echo -e "\033[1;31m[ERROR]\033[0m $1"; exit 1; }
 
 backup_file() {
     local file="$1"
+
+    # Если файла нет
     if [ ! -f "$file" ]; then
-        err "Файл $file не найден, резервная копия не создана."
-        return
+        info "Файл $file ещё не существует, backup не требуется"
+        return 0
     fi
     local timestamp="$(date +%Y%m%d-%H%M%S)"
+    # Первый backup
     if [ ! -f "${file}.original" ]; then
         cp "$file" "${file}.original"
         info "Создан original-бэкап: ${file}.original"
     else
         cp "$file" "${file}.bak-${timestamp}"
-        info "Создан nextcloud-бэкап: ${file}.nextcloud"
+        info "Создан бэкап: ${file}.bak-${timestamp}"
     fi
 }
 
@@ -58,6 +61,39 @@ check_disk_space() {
     fi
 }
 
+check_docker() {
+    if command -v docker &>/dev/null; then
+        if docker info &>/dev/null 2>&1; then
+            info "Docker доступен."
+            return 0
+        fi
+        echo ""
+        warn "Docker установлен, но текущий пользователь не в группе docker."
+        echo ""
+        echo "Выполните команду (добавление в группу и применение):"
+        echo -e "  ${GREEN}sudo usermod -aG docker \$USER && newgrp docker${NC}"
+        echo ""
+        echo "Затем запустите этот скрипт снова:"
+        echo -e "  ${GREEN}$(rerun_cmd)${NC}"
+        echo ""
+        exit 1
+    fi
+    info "Установка Docker..."
+    curl -fsSL https://get.docker.com | sh
+    if ! docker info &>/dev/null 2>&1; then
+        echo ""
+        warn "Docker установлен. Нужно добавить пользователя в группу docker."
+        echo ""
+        echo "Выполните команду:"
+        echo -e "  ${GREEN}sudo usermod -aG docker \$USER && newgrp docker${NC}"
+        echo ""
+        echo "Затем запустите этот скрипт снова:"
+        echo -e "  ${GREEN}$(rerun_cmd)${NC}"
+        echo ""
+        exit 1
+    fi
+}
+
 ### =========================
 ### ПРОВЕРКИ
 ### =========================
@@ -66,9 +102,8 @@ check_disk_space() {
 
 check_disk_space
 command -v nginx >/dev/null || err "Nginx не установлен"
-command -v docker >/dev/null || err "Docker не установлен"
-command -v docker-compose >/dev/null || command -v docker >/dev/null || err "Docker Compose не найден"
 command -v certbot >/dev/null || err "Certbot не установлен"
+check_docker
 
 ### =========================
 ### ВВОД ДАННЫХ
